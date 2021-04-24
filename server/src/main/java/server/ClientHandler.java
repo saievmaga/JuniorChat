@@ -5,12 +5,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
     private Server server;
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private ExecutorService executorService;
 
     private String nickname;
     private String login;
@@ -21,6 +24,10 @@ public class ClientHandler {
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
+            executorService = Executors.newFixedThreadPool(1);
+            executorService.execute(() ->{
+
+
 
             new Thread(() -> {
                 try {
@@ -78,6 +85,7 @@ public class ClientHandler {
                         }
                     }
 
+
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
@@ -107,17 +115,19 @@ public class ClientHandler {
                     System.out.println("client disconnect " + socket.getRemoteSocketAddress());
                     try {
                         socket.close();
-
+                        executorService.shutdown();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }).start();
+            });
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     public void sendMsg(String msg) {
         try {
